@@ -16,7 +16,7 @@ struct {
   unsigned long nMinPerUsec = 60000000L;
   bool bReverse = false;
   bool bTestMode = false;
-  int nStepSpeed = 60;
+  int nStepSpeed = 6;
   int nSafetyMotion = 0;
 } settings;
 
@@ -35,7 +35,7 @@ int seq[4][4] = {
 
 void rotate(int step) {
   // wait for a single step of stepper
-  const int delaytime = 6;
+  const int delaytime = settings.nStepSpeed;
   static int phase = 0;
   int i, j;
   int delta = (step < 0 || settings.bReverse) ? 3 : 1;
@@ -118,9 +118,6 @@ void loop() {
         }
         bool bSaveSettings = false;
         switch (ch) {
-          case '?':
-            ShowMenu();
-            break;
           case '+':
             if (argval == 0)
               argval = 1;
@@ -143,23 +140,25 @@ void loop() {
             break;
           case 'S':  // stepper delay
             if (argval == 0)
-              argval = 60;
-            settings.nStepSpeed;
+              argval = 6;
+            settings.nStepSpeed = argval;
             bSaveSettings = true;
             break;
           case 'C':  // clock calibration, default is 0
             settings.nMinPerUsec = 60000000L - argval;
             bSaveSettings = true;
             break;
-          case 'R': // toggle reverse motor setting
-              settings.bReverse = !settings.bReverse;
-              bSaveSettings = true;
-              break;
+          case 'R':  // toggle reverse motor setting
+            settings.bReverse = !settings.bReverse;
+            bSaveSettings = true;
+            break;
         }
         if (bSaveSettings) {
           EEPROM.put(0, settings);
           EEPROM.commit();
         }
+        // always do this
+        ShowMenu();
       }
       delay(10);
       return;
@@ -178,14 +177,14 @@ void ShowMenu() {
   Serial.println(String("uSeconds adjust per minute : ") + String(60000000L - settings.nMinPerUsec));
   Serial.println(String("Reverse Motor              : ") + settings.bReverse);
   Serial.println(String("Test Mode                  : ") + settings.bTestMode);
-  Serial.println(String("Step Speed                 : ") + settings.nStepSpeed);
+  Serial.println(String("Stepper Delay              : ") + settings.nStepSpeed);
   Serial.println(String("----- Commands -----"));
   Serial.println(String("+<n> : Advance n minutes"));
   Serial.println(String("-<n> : Reverse n minutes"));
   Serial.println(String("A<n> : Adjust Minute Position (+/- 256 is a full minute)"));
   Serial.println(String("T    : Test mode (enter anything while running to stop)"));
-  Serial.println(String("S<n> : Set stepper motor delay, default is 60, range 2 to 120"));
+  Serial.println(String("S<n> : Set stepper motor delay, default is 6, range 2 to 120"));
   Serial.println(String("C<n> : Calibrate uSeconds per minute, is default, change as needed, +speeds up, -slows down"));
-  Serial.println(String("R    : Toggle reverse motor setting"));
+  Serial.println(String("R    : Reverse motor setting"));
   Serial.println("Command?");
 }
