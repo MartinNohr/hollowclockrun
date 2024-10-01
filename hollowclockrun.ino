@@ -96,8 +96,8 @@ void loop() {
       EEPROM.commit();
     }
   } else {
-    usec = micros();
-    //usec = (uint64_t)millis() * (uint64_t)1000;
+    //usec = micros();
+    usec = (uint64_t)millis() * (uint64_t)1000;
     cnt = usec / settings.nMinPerUsec;
     if (prev_cnt == cnt) {
       // check for keyboard
