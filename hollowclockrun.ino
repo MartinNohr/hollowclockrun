@@ -151,6 +151,10 @@ void loop() {
             settings.nMinPerUsec = 60000000L - argval;
             bSaveSettings = true;
             break;
+          case 'R': // toggle reverse motor setting
+              settings.bReverse = !settings.bReverse;
+              bSaveSettings = true;
+              break;
         }
         if (bSaveSettings) {
           EEPROM.put(0, settings);
@@ -182,5 +186,6 @@ void ShowMenu() {
   Serial.println(String("T    : Test mode (enter anything while running to stop)"));
   Serial.println(String("S<n> : Set stepper motor delay, default is 60, range 2 to 120"));
   Serial.println(String("C<n> : Calibrate uSeconds per minute, is default, change as needed, +speeds up, -slows down"));
+  Serial.println(String("R    : Toggle reverse motor setting"));
   Serial.println("Command?");
 }
