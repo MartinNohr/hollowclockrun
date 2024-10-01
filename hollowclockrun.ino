@@ -126,7 +126,7 @@ void loop() {
               argval = 1;
             rotate(STEPS_PER_MIN * argval);
             break;
-          case '-':  // go back one to0 many and then back forward to take care of backlash in the gears
+          case '-':  // go back one too many and then back forward to take care of backlash in the gears
             if (argval == 0)
               argval = 1;
             rotate(-(STEPS_PER_MIN * argval + STEPS_PER_MIN));
