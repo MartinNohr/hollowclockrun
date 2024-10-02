@@ -156,6 +156,10 @@ void loop() {
             settings.bReverse = !settings.bReverse;
             bSaveSettings = true;
             break;
+          case 'W':  // toggle running state
+            settings.bRunning = !settings.bRunning;
+            bSaveSettings = true;
+            break;
         }
         if (bSaveSettings) {
           EEPROM.put(0, settings);
