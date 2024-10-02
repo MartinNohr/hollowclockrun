@@ -1,5 +1,5 @@
 #include <EEPROM.h>
-#define HC_VERSION 2  // change this when the settings structure is changed
+#define HC_VERSION 3  // change this when the settings structure is changed
 
 // Motor and clock parameters
 // 2048 * 90 / 12 / 60 = 256
@@ -18,6 +18,7 @@ struct {
   bool bTestMode = false;
   int nStepSpeed = 6;
   int nSafetyMotion = 0;
+  bool bRunning = true;
 } settings;
 
 // ports used to control the stepper motor
@@ -34,6 +35,8 @@ int seq[4][4] = {
 };
 
 void rotate(int step) {
+  if (step == 0)
+    return;
   // wait for a single step of stepper
   const int delaytime = settings.nStepSpeed;
   static int phase = 0;
@@ -162,13 +165,12 @@ void loop() {
         ShowMenu();
       }
       delay(10);
-      return;
+    } else if (settings.bRunning) {
+      // time to advance the clock one minute
+      prev_cnt = cnt;
+      rotate(STEPS_PER_MIN + SAFETY_MOTION);  // go a little too far
+      rotate(-SAFETY_MOTION);                 // correct it
     }
-    prev_cnt = cnt;
-
-    rotate(STEPS_PER_MIN + SAFETY_MOTION);  // go too far a bit
-    if (SAFETY_MOTION)
-      rotate(-SAFETY_MOTION);  // alignment
   }
 }
 
@@ -179,6 +181,7 @@ void ShowMenu() {
   Serial.println(String("Reverse Motor              : ") + settings.bReverse);
   Serial.println(String("Test Mode                  : ") + settings.bTestMode);
   Serial.println(String("Stepper Delay              : ") + settings.nStepSpeed);
+  Serial.println(String("Wait State                 : ") + (Settings.bRunning ? "Running" : "Waiting"));
   Serial.println(String("----- Commands -----"));
   Serial.println(String("+<n> : Advance n minutes"));
   Serial.println(String("-<n> : Reverse n minutes"));
@@ -187,5 +190,6 @@ void ShowMenu() {
   Serial.println(String("S<n> : Set stepper motor delay, default is 6, range 2 to 120"));
   Serial.println(String("C<n> : Calibrate uSeconds per minute, is default, change as needed, +speeds up, -slows down"));
   Serial.println(String("R    : Reverse motor setting"));
+  Serial.println(String("W    : Wait, toggle running state of clock"));
   Serial.println("Command?");
 }
