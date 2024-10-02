@@ -181,7 +181,7 @@ void ShowMenu() {
   Serial.println(String("Reverse Motor              : ") + settings.bReverse);
   Serial.println(String("Test Mode                  : ") + settings.bTestMode);
   Serial.println(String("Stepper Delay              : ") + settings.nStepSpeed);
-  Serial.println(String("Wait State                 : ") + (Settings.bRunning ? "Running" : "Waiting"));
+  Serial.println(String("Wait State                 : ") + (settings.bRunning ? "Running" : "Waiting"));
   Serial.println(String("----- Commands -----"));
   Serial.println(String("+<n> : Advance n minutes"));
   Serial.println(String("-<n> : Reverse n minutes"));
