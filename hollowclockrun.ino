@@ -13,7 +13,7 @@ struct {
   int nVersion = HC_VERSION;  // this int must be first
                               // one minute per micro seconds. Theoretically it should be 60000000,
                               // and can be used to adjust the clock speed.
-  unsigned long nMinPerUsec = 60000000L;
+  unsigned long nUSecPerMin = 60000000L;
   bool bReverse = false;
   bool bTestMode = false;
   int nStepSpeed = 6;
@@ -86,18 +86,17 @@ void setup() {
 }
 
 void loop() {
-  static uint64_t prev_cnt = 0;
-  uint64_t cnt, usec;
+  static uint64_t minutes;
   static unsigned long last_micros;
+  static unsigned long last_read_micros;  // used to check for rollover
   unsigned long current_micros = micros();
-  if (current_micros < last_micros) {
-    unsigned long correction = ULONG_MAX - last_micros + 1;
+  // handle the rollover
+  if (current_micros < last_read_micros) {
+    unsigned long correction = ULONG_MAX - last_read_micros + 1;
     Serial.println(String("correction: ") + correction + " current: " + current_micros);
-    prev_cnt = cnt = 0;
     current_micros += correction;
+    last_micros = current_micros;
   }
-  last_micros = current_micros;
-
   if (settings.bTestMode) {
     // just run the motor until they enter anything
     rotate(STEPS_PER_MIN);
@@ -106,91 +105,92 @@ void loop() {
       EEPROM.put(0, settings);
       EEPROM.commit();
     }
-  } else {
-    usec = current_micros;
-    // usec = (uint64_t)millis() * (uint64_t)1000;
-    cnt = usec / settings.nMinPerUsec;
-    if (prev_cnt == cnt) {
-      // check for keyboard
-      if (Serial.available()) {
-        String line;
-        line = Serial.readString();
-        line.trim();
-        line.toUpperCase();
-        if (line.length() == 0)
-          line = "?";
-        // Serial.println("line read: " + line);
-        // see if any parameters, leave in line
-        char ch = line[0];
-        line = line.substring(1);
-        line.trim();
-        int argval = 0;
-        if (line.length()) {
-          argval = line.toInt();
-        }
-        bool bSaveSettings = false;
-        switch (ch) {
-          case '+':
-            if (argval == 0)
-              argval = 1;
-            rotate(STEPS_PER_MIN * argval);
-            break;
-          case '-':  // go back one too many and then back forward to take care of backlash in the gears
-            if (argval == 0)
-              argval = 1;
-            rotate(-(STEPS_PER_MIN * argval + STEPS_PER_MIN));
-            rotate(STEPS_PER_MIN);
-            break;
-          case 'A':  // adjust stepper position
-            if (argval == 0)
-              argval = 1;
-            rotate(argval);
-            break;
-          case 'T':  // test mode
-            settings.bTestMode = true;
-            bSaveSettings = true;
-            break;
-          case 'S':  // stepper delay
-            if (argval == 0)
-              argval = 6;
-            settings.nStepSpeed = argval;
-            bSaveSettings = true;
-            break;
-          case 'C':  // clock calibration, default is 0
-            settings.nMinPerUsec = 60000000L - argval;
-            bSaveSettings = true;
-            break;
-          case 'R':  // toggle reverse motor setting
-            settings.bReverse = !settings.bReverse;
-            bSaveSettings = true;
-            break;
-          case 'W':  // toggle running state
-            settings.bRunning = !settings.bRunning;
-            bSaveSettings = true;
-            break;
-        }
-        if (bSaveSettings) {
-          EEPROM.put(0, settings);
-          EEPROM.commit();
-        }
-        // always do this
-        ShowMenu();
-      }
-      delay(10);
-    } else if (settings.bRunning) {
-      Serial.println(String("cnt: ") + (unsigned long)cnt);
-      // time to advance the clock one minute
-      prev_cnt = cnt;
+    // see if we have gone another minute
+  } else if (current_micros - last_micros >= settings.nUSecPerMin) {
+    Serial.println(String("minutes: ") + (unsigned long)minutes + " current: " + current_micros + " last: " + last_micros);
+    // time to advance the clock one minute
+    ++minutes;
+    // bump the uSeconds for the next minute
+    last_micros += settings.nUSecPerMin;
+    if (settings.bRunning) {
       rotate(STEPS_PER_MIN + SAFETY_MOTION);  // go a little too far
       rotate(-SAFETY_MOTION);                 // correct it
     }
+  } else {
+    // not time yet, so check the keyboard
+    // check for keyboard
+    if (Serial.available()) {
+      String line;
+      line = Serial.readString();
+      line.trim();
+      line.toUpperCase();
+      if (line.length() == 0)
+        line = "?";
+      // Serial.println("line read: " + line);
+      // see if any parameters, leave in line
+      char ch = line[0];
+      line = line.substring(1);
+      line.trim();
+      int argval = 0;
+      if (line.length()) {
+        argval = line.toInt();
+      }
+      bool bSaveSettings = false;
+      switch (ch) {
+        case '+':
+          if (argval == 0)
+            argval = 1;
+          rotate(STEPS_PER_MIN * argval);
+          break;
+        case '-':  // go back one too many and then back forward to take care of backlash in the gears
+          if (argval == 0)
+            argval = 1;
+          rotate(-(STEPS_PER_MIN * argval + STEPS_PER_MIN));
+          rotate(STEPS_PER_MIN);
+          break;
+        case 'A':  // adjust stepper position
+          if (argval == 0)
+            argval = 1;
+          rotate(argval);
+          break;
+        case 'T':  // test mode
+          settings.bTestMode = true;
+          bSaveSettings = true;
+          break;
+        case 'S':  // stepper delay
+          if (argval == 0)
+            argval = 6;
+          settings.nStepSpeed = argval;
+          bSaveSettings = true;
+          break;
+        case 'C':  // clock calibration, default is 0
+          settings.nUSecPerMin = 60000000L - argval;
+          bSaveSettings = true;
+          break;
+        case 'R':  // toggle reverse motor setting
+          settings.bReverse = !settings.bReverse;
+          bSaveSettings = true;
+          break;
+        case 'W':  // toggle running state
+          settings.bRunning = !settings.bRunning;
+          bSaveSettings = true;
+          break;
+      }
+      if (bSaveSettings) {
+        EEPROM.put(0, settings);
+        EEPROM.commit();
+      }
+      // always do this
+      ShowMenu();
+    }
   }
+  delay(10);
 }
 
 void ShowMenu() {
   Serial.println(String("----- Current Settings -----"));
   Serial.println(String("Data version               : ") + HC_VERSION);
-  Serial.println(String("uSeconds adjust per minute : ") + String(60000000L - settings.nMinPerUsec));
+  Serial.println(String("uSeconds adjust per minute : ") + String(60000000L - settings.nUSecPerMin));
   Serial.println(String("Reverse Motor              : ") + settings.bReverse);
   Serial.println(String("Test Mode                  : ") + settings.bTestMode);
   Serial.println(String("Stepper Delay              : ") + settings.nStepSpeed);
