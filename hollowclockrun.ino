@@ -71,7 +71,6 @@ void setup() {
   while (!Serial.availableForWrite())
     delay(10);
   EEPROM.begin(512);
-  Serial.println("Starting clock");
   int checkVer;
   EEPROM.get(0, checkVer);
   // see if value is valid
@@ -87,8 +86,17 @@ void setup() {
 }
 
 void loop() {
-  static uint64_t prev_cnt = -1;
+  static uint64_t prev_cnt = 0;
   uint64_t cnt, usec;
+  static unsigned long last_micros;
+  unsigned long current_micros = micros();
+  if (current_micros < last_micros) {
+    unsigned long correction = ULONG_MAX - last_micros + 1;
+    Serial.println(String("correction: ") + correction + " current: " + current_micros);
+    prev_cnt = cnt = 0;
+    current_micros += correction;
+  }
+  last_micros = current_micros;
 
   if (settings.bTestMode) {
     // just run the motor until they enter anything
@@ -99,8 +107,8 @@ void loop() {
       EEPROM.commit();
     }
   } else {
-    //usec = micros();
-    usec = (uint64_t)millis() * (uint64_t)1000;
+    usec = current_micros;
+    // usec = (uint64_t)millis() * (uint64_t)1000;
     cnt = usec / settings.nMinPerUsec;
     if (prev_cnt == cnt) {
       // check for keyboard
@@ -170,6 +178,7 @@ void loop() {
       }
       delay(10);
     } else if (settings.bRunning) {
+      Serial.println(String("cnt: ") + (unsigned long)cnt);
       // time to advance the clock one minute
       prev_cnt = cnt;
       rotate(STEPS_PER_MIN + SAFETY_MOTION);  // go a little too far
