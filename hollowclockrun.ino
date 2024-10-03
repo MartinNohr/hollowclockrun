@@ -95,7 +95,8 @@ void loop() {
     unsigned long correction = ULONG_MAX - last_read_micros + 1;
     Serial.println(String("correction: ") + correction + " current: " + current_micros);
     current_micros += correction;
-    last_micros = current_micros;
+    last_read_micros = current_micros;
+    last_micros = 0;
   }
   if (settings.bTestMode) {
     // just run the motor until they enter anything
