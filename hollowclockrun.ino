@@ -88,7 +88,6 @@ void setup() {
 void loop() {
   static uint64_t minutes;
   static unsigned long last_micros;
-  static unsigned long last_read_micros;  // used to check for rollover
   unsigned long current_micros = micros();
   if (settings.bTestMode) {
     // just run the motor until they enter anything
@@ -110,14 +109,6 @@ void loop() {
       }
       // bump the uSeconds for the next minute
       last_micros += settings.nUSecPerMin;
-    }
-    // handle the rollover
-    if (current_micros < last_read_micros) {
-      unsigned long correction = ULONG_MAX - last_read_micros + 1;
-      Serial.println(String("correction: ") + correction + " current: " + current_micros);
-      current_micros += correction;
-      last_read_micros = current_micros;
-      last_micros = 0;
     }
     // check for keyboard
     RunMenu();
@@ -194,7 +185,7 @@ void RunMenu() {
 void ShowMenu() {
   Serial.println(String("----- Current Settings -----"));
   Serial.println(String("Data version               : ") + HC_VERSION);
-  Serial.println(String("uSeconds adjust per minute : ") + String(60000000L - settings.nUSecPerMin));
+  Serial.println(String("uSeconds adjust per minute : ") + String(60000000L - (long)settings.nUSecPerMin));
   Serial.println(String("Reverse Motor              : ") + settings.bReverse);
   Serial.println(String("Test Mode                  : ") + settings.bTestMode);
   Serial.println(String("Stepper Delay              : ") + settings.nStepSpeed);
