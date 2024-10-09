@@ -98,9 +98,9 @@ void loop() {
       EEPROM.commit();
     }
   } else {
-    // see if we have gone another minute
-    if (current_micros - last_micros >= settings.nUSecPerMin) {
-      Serial.println(String("minutes: ") + (unsigned long)minutes + " current: " + current_micros + " last: " + last_micros);
+    // see if we have gone another minute, use while because we might have missed a minute while doing menus
+    while (current_micros - last_micros >= settings.nUSecPerMin) {
+      Serial.println(String("minutes: ") + (unsigned long)minutes + " Hours: " + String((float)minutes, 2) + " current uS: " + current_micros + " last uS: " + last_micros);
       // time to advance the clock one minute
       ++minutes;
       if (settings.bRunning) {
@@ -173,6 +173,25 @@ void RunMenu() {
         settings.bRunning = !settings.bRunning;
         bSaveSettings = true;
         break;
+      case 'F':  // figure out time correction setting
+        if (line.length() == 0)
+          break;
+        {
+          long seconds, hours;
+          seconds = line.toInt();
+          // check for second argument
+          int index = line.indexOf(' ');
+          if (index <= 0)
+            break;
+          line = line.substring(index);
+          line.trim();
+          hours = line.toInt();
+          long correction = seconds * 1000000 / hours / 3600;
+          // Serial.println(correction);
+          settings.nUSecPerMin = 60000000L + correction;
+          bSaveSettings = true;
+        }
+        break;
     }
     if (bSaveSettings) {
       EEPROM.put(0, settings);
@@ -191,13 +210,14 @@ void ShowMenu() {
   Serial.println(String("Stepper Delay              : ") + settings.nStepSpeed);
   Serial.println(String("Wait State                 : ") + (settings.bRunning ? "Running" : "Waiting"));
   Serial.println(String("----- Commands -----"));
-  Serial.println(String("+<n> : Advance n minutes"));
-  Serial.println(String("-<n> : Reverse n minutes"));
-  Serial.println(String("A<n> : Adjust Minute Position (+/- 256 is a full minute)"));
-  Serial.println(String("T    : Test mode (enter anything while running to stop)"));
-  Serial.println(String("S<n> : Set stepper motor delay, default is 6, range 2 to 120"));
-  Serial.println(String("C<n> : Calibrate uSeconds per minute, is default, change as needed, +speeds up, -slows down"));
-  Serial.println(String("R    : Reverse motor setting"));
-  Serial.println(String("W    : Wait, toggle running state of clock"));
+  Serial.println(String("+<n>           : Advance n minutes"));
+  Serial.println(String("-<n>           : Reverse n minutes"));
+  Serial.println(String("A<n>           : Adjust Minute Position (+/- 256 is a full minute)"));
+  Serial.println(String("T              : Test mode (enter anything while running to stop)"));
+  Serial.println(String("S<n>           : Set stepper motor delay, default is 6, range 2 to 120"));
+  Serial.println(String("C<n>           : Calibrate uSeconds per minute, is default, change as needed, +speeds up, -slows down"));
+  Serial.println(String("F<sec> <hours> : Figure correction using seconds and hours, e.g. F -2 24 if 2 seconds slow per day"));
+  Serial.println(String("R              : Reverse motor setting"));
+  Serial.println(String("W              : Wait, toggle running state of clock"));
   Serial.println("Command?");
 }
