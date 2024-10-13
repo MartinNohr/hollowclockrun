@@ -205,8 +205,8 @@ void ShowMenu() {
   Serial.println(String("----- Current Settings -----"));
   Serial.println(String("Data version               : ") + HC_VERSION);
   Serial.println(String("uSeconds adjust per minute : ") + String(60000000L - (long)settings.nUSecPerMin));
-  Serial.println(String("Reverse Motor              : ") + settings.bReverse);
-  Serial.println(String("Test Mode                  : ") + settings.bTestMode);
+  Serial.println(String("Reverse Motor              : ") + (settings.bReverse?"Yes":"No"));
+  Serial.println(String("Test Mode                  : ") + (settings.bTestMode?"On":"Off"));
   Serial.println(String("Stepper Delay              : ") + settings.nStepSpeed);
   Serial.println(String("Wait State                 : ") + (settings.bRunning ? "Running" : "Waiting"));
   Serial.println(String("----- Commands -----"));
