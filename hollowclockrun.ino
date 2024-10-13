@@ -188,7 +188,8 @@ void RunMenu() {
           hours = line.toInt();
           long correction = (long)(seconds * 1000000.0 / hours / 60.0);
           // Serial.println(correction);
-          settings.nUSecPerMin = 60000000L + correction;
+          // add to current setting, makes more sense since it might already have been adjusted
+          settings.nUSecPerMin = settings.nUSecPerMin + correction;
           bSaveSettings = true;
         }
         break;
@@ -204,7 +205,7 @@ void RunMenu() {
 void ShowMenu() {
   Serial.println(String("----- Current Settings -----"));
   Serial.println(String("Data version               : ") + HC_VERSION);
-  Serial.println(String("uSeconds adjust per minute : ") + String(60000000L - (long)settings.nUSecPerMin));
+  Serial.println(String("uSeconds adjust per minute : ") + String(60000000L - settings.nUSecPerMin));
   Serial.println(String("Reverse Motor              : ") + (settings.bReverse?"Yes":"No"));
   Serial.println(String("Test Mode                  : ") + (settings.bTestMode?"On":"Off"));
   Serial.println(String("Stepper Delay              : ") + settings.nStepSpeed);
