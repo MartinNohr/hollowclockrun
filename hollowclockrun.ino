@@ -177,8 +177,8 @@ void RunMenu() {
         if (line.length() == 0)
           break;
         {
-          long seconds, hours;
-          seconds = line.toInt();
+          float seconds, hours;
+          seconds = line.toFloat();
           // check for second argument
           int index = line.indexOf(' ');
           if (index <= 0)
@@ -186,7 +186,7 @@ void RunMenu() {
           line = line.substring(index);
           line.trim();
           hours = line.toInt();
-          long correction = seconds * 1000000 / hours / 3600;
+          long correction = (long)(seconds * 1000000.0 / hours / 60.0);
           // Serial.println(correction);
           settings.nUSecPerMin = 60000000L + correction;
           bSaveSettings = true;
@@ -216,7 +216,7 @@ void ShowMenu() {
   Serial.println(String("T              : Test mode (enter anything while running to stop)"));
   Serial.println(String("S<n>           : Set stepper motor delay, default is 6, range 2 to 120"));
   Serial.println(String("C<n>           : Calibrate uSeconds per minute, is default, change as needed, +speeds up, -slows down"));
-  Serial.println(String("F<sec> <hours> : Figure correction using seconds and hours, e.g. F -2 24 if 2 seconds slow per day"));
+  Serial.println(String("F<sec> <hours> : Figure correction using seconds and hours (floats), e.g. F -2.5 24.0 if 2 seconds slow per day"));
   Serial.println(String("R              : Reverse motor setting"));
   Serial.println(String("W              : Wait, toggle running state of clock"));
   Serial.println("Command?");
