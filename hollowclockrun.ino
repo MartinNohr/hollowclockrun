@@ -106,6 +106,8 @@ void loop() {
       if (settings.bRunning) {
         rotate(STEPS_PER_MIN + SAFETY_MOTION);  // go a little too far
         rotate(-SAFETY_MOTION);                 // correct it
+      } else {
+        last_micros = current_micros = 0;
       }
       // bump the uSeconds for the next minute
       last_micros += settings.nUSecPerMin;
@@ -129,7 +131,7 @@ void RunMenu() {
     char ch = line[0];
     line = line.substring(1);
     line.trim();
-    int argval = 0;
+    long argval = 0;
     if (line.length()) {
       argval = line.toInt();
     }
@@ -150,6 +152,11 @@ void RunMenu() {
         if (argval == 0)
           argval = 1;
         rotate(argval);
+        // if negative move backwards to take up slack
+        if (argval < 0) {
+          rotate(-STEPS_PER_MIN);
+          rotate(STEPS_PER_MIN);
+        }
         break;
       case 'T':  // test mode
         settings.bTestMode = true;
@@ -185,11 +192,11 @@ void RunMenu() {
             break;
           line = line.substring(index);
           line.trim();
-          hours = line.toInt();
+          hours = line.toFloat();
           long correction = (long)(seconds * 1000000.0 / hours / 60.0);
           // Serial.println(correction);
           // add to current setting, makes more sense since it might already have been adjusted
-          settings.nUSecPerMin = settings.nUSecPerMin + correction;
+          settings.nUSecPerMin = (long)settings.nUSecPerMin + correction;
           bSaveSettings = true;
         }
         break;
@@ -203,11 +210,12 @@ void RunMenu() {
 }
 
 void ShowMenu() {
+  long correction = 60000000L - settings.nUSecPerMin;
   Serial.println(String("----- Current Settings -----"));
   Serial.println(String("Data version               : ") + HC_VERSION);
-  Serial.println(String("uSeconds adjust per minute : ") + String(60000000L - settings.nUSecPerMin));
-  Serial.println(String("Reverse Motor              : ") + (settings.bReverse?"Yes":"No"));
-  Serial.println(String("Test Mode                  : ") + (settings.bTestMode?"On":"Off"));
+  Serial.println(String("uSeconds adjust per minute : ") + String(correction) + " or " + String((float)((float)correction * 60 * 24 / 1000000L), 2) + " sec/day");
+  Serial.println(String("Reverse Motor              : ") + (settings.bReverse ? "Yes" : "No"));
+  Serial.println(String("Test Mode                  : ") + (settings.bTestMode ? "On" : "Off"));
   Serial.println(String("Stepper Delay              : ") + settings.nStepSpeed);
   Serial.println(String("Wait State                 : ") + (settings.bRunning ? "Running" : "Waiting"));
   Serial.println(String("----- Commands -----"));
