@@ -99,7 +99,7 @@ void loop() {
     }
   } else {
     // see if we have gone another minute, use while because we might have missed a minute while doing menus
-    while (current_micros - last_micros >= settings.nUSecPerMin) {
+    while (settings.bRunning && (current_micros - last_micros >= settings.nUSecPerMin)) {
       Serial.println(String("minutes: ") + (unsigned long)minutes + " Hours: " + String((float)minutes / 60, 2) + " current uS: " + current_micros + " last uS: " + last_micros);
       // time to advance the clock one minute
       ++minutes;
