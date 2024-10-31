@@ -101,7 +101,7 @@ void loop() {
     if (settings.bRunning) {
       // see if we have gone another minute, use while because we might have missed a minute while doing menus
       while (current_micros - last_micros >= settings.nUSecPerMin) {
-        Serial.println(String("minutes: ") + (unsigned long)minutes + " Hours: " + String((float)minutes / 60, 2) + " current uS: " + current_micros + " last uS: " + last_micros);
+        Serial.println(String("run time minutes: ") + (unsigned long)minutes + " = Hours: " + String((float)minutes / 60, 2) + "internal clock uS: " + current_micros + " last uS: " + last_micros);
         // time to advance the clock one minute
         ++minutes;
         rotate(STEPS_PER_MIN + SAFETY_MOTION);  // go a little too far
@@ -212,22 +212,22 @@ void RunMenu() {
 
 void ShowMenu() {
   long correction = 60000000L - settings.nUSecPerMin;
-  Serial.println(String("----- Current Settings -----"));
-  Serial.println(String("Data version               : ") + HC_VERSION);
-  Serial.println(String("uSeconds adjust per minute : ") + String(correction) + " or " + String((float)((float)correction * 60 * 24 / 1000000L), 2) + " sec/day");
-  Serial.println(String("Reverse Motor              : ") + (settings.bReverse ? "Yes" : "No"));
-  Serial.println(String("Test Mode                  : ") + (settings.bTestMode ? "On" : "Off"));
-  Serial.println(String("Stepper Delay              : ") + settings.nStepSpeed);
-  Serial.println(String("Wait State                 : ") + (settings.bRunning ? "Running" : "Waiting"));
-  Serial.println(String("----- Commands -----"));
+  Serial.println(String("------ Current Settings ------"));
+  Serial.println(String("Data version                  : ") + HC_VERSION);
+  Serial.println(String("uSeconds calibrate per minute : ") + String(correction) + " or " + String((float)((float)correction * 60 * 24 / 1000000L), 2) + " sec/day");
+  Serial.println(String("Wait/Run State                : ") + (settings.bRunning ? "Running" : "Waiting"));
+  Serial.println(String("Stepper Delay (mSec)          : ") + settings.nStepSpeed);
+  Serial.println(String("Test Mode                     : ") + (settings.bTestMode ? "On" : "Off"));
+  Serial.println(String("Reverse Motor                 : ") + (settings.bReverse ? "Yes" : "No"));
+  Serial.println(String("--- Commands ---"));
   Serial.println(String("+<n>           : Advance n minutes"));
   Serial.println(String("-<n>           : Reverse n minutes"));
   Serial.println(String("A<n>           : Adjust Minute Position (+/- 256 is a full minute)"));
-  Serial.println(String("T              : Test mode (enter anything while running to stop)"));
-  Serial.println(String("S<n>           : Set stepper motor delay, default is 6, range 2 to 120"));
+  Serial.println(String("W              : Wait, toggle running state of clock"));
   Serial.println(String("C<n>           : Calibrate uSeconds per minute, is default, change as needed, +speeds up, -slows down"));
   Serial.println(String("F<sec> <hours> : Figure correction using seconds and hours (floats), e.g. F -2.5 24.0 if 2 seconds slow per day"));
+  Serial.println(String("S<n>           : Set stepper motor delay, default is 6, range 2 to 120"));
+  Serial.println(String("T              : Test mode (enter anything while running to stop)"));
   Serial.println(String("R              : Reverse motor setting"));
-  Serial.println(String("W              : Wait, toggle running state of clock"));
   Serial.println("Command?");
 }
