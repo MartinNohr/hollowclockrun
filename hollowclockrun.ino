@@ -111,6 +111,7 @@ void loop() {
       }
     } else {
       last_micros = current_micros = micros();
+      minutes = 0;
     }
     // check for keyboard
     RunMenu();
