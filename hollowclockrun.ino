@@ -98,19 +98,19 @@ void loop() {
       EEPROM.commit();
     }
   } else {
-    // see if we have gone another minute, use while because we might have missed a minute while doing menus
-    while (settings.bRunning && (current_micros - last_micros >= settings.nUSecPerMin)) {
-      Serial.println(String("minutes: ") + (unsigned long)minutes + " Hours: " + String((float)minutes / 60, 2) + " current uS: " + current_micros + " last uS: " + last_micros);
-      // time to advance the clock one minute
-      ++minutes;
-      if (settings.bRunning) {
+    if (settings.bRunning) {
+      // see if we have gone another minute, use while because we might have missed a minute while doing menus
+      while (current_micros - last_micros >= settings.nUSecPerMin) {
+        Serial.println(String("minutes: ") + (unsigned long)minutes + " Hours: " + String((float)minutes / 60, 2) + " current uS: " + current_micros + " last uS: " + last_micros);
+        // time to advance the clock one minute
+        ++minutes;
         rotate(STEPS_PER_MIN + SAFETY_MOTION);  // go a little too far
         rotate(-SAFETY_MOTION);                 // correct it
-      } else {
-        last_micros = current_micros = 0;
+        // bump the uSeconds for the next minute
+        last_micros += settings.nUSecPerMin;
       }
-      // bump the uSeconds for the next minute
-      last_micros += settings.nUSecPerMin;
+    } else {
+      last_micros = current_micros = micros();
     }
     // check for keyboard
     RunMenu();
