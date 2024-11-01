@@ -1,5 +1,6 @@
 #include <EEPROM.h>
 #define HC_VERSION 1  // change this when the settings structure is changed
+#define FIRMWARE_VERSION 1.00
 
 // Motor and clock parameters
 // 2048 * 90 / 12 / 60 = 256
@@ -101,9 +102,9 @@ void loop() {
     if (settings.bRunning) {
       // see if we have gone another minute, use while because we might have missed a minute while doing menus
       while (current_micros - last_micros >= settings.nUSecPerMin) {
-        Serial.println(String("run time minutes: ") + (unsigned long)minutes + " = Hours: " + String((float)minutes / 60, 2) + "internal clock uS: " + current_micros + " last uS: " + last_micros);
         // time to advance the clock one minute
         ++minutes;
+        Serial.println(String("run time minutes: ") + (unsigned long)minutes + " = Hours: " + String((float)minutes / 60, 2) + " internal clock uS: " + current_micros + " last uS: " + last_micros);
         rotate(STEPS_PER_MIN + SAFETY_MOTION);  // go a little too far
         rotate(-SAFETY_MOTION);                 // correct it
         // bump the uSeconds for the next minute
@@ -213,7 +214,7 @@ void RunMenu() {
 void ShowMenu() {
   long correction = 60000000L - settings.nUSecPerMin;
   Serial.println(String("------ Current Settings ------"));
-  Serial.println(String("Data version                  : ") + HC_VERSION);
+  Serial.println(String("Firmware version              : ") + FIRMWARE_VERSION);
   Serial.println(String("uSeconds calibrate per minute : ") + String(correction) + " or " + String((float)((float)correction * 60 * 24 / 1000000L), 2) + " sec/day");
   Serial.println(String("Wait/Run State                : ") + (settings.bRunning ? "Running" : "Waiting"));
   Serial.println(String("Stepper Delay (mSec)          : ") + settings.nStepSpeed);
