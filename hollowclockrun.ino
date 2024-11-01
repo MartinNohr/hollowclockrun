@@ -104,7 +104,8 @@ void loop() {
       while (current_micros - last_micros >= settings.nUSecPerMin) {
         // time to advance the clock one minute
         ++minutes;
-        Serial.println(String("run time minutes: ") + (unsigned long)minutes + " = Hours: " + String((float)minutes / 60, 2) + " internal clock uS: " + current_micros + " last uS: " + last_micros);
+        // Serial.println(String("run time minutes: ") + (unsigned long)minutes + " = Hours: " + String((float)minutes / 60, 2) + " internal clock uS: " + current_micros + " last uS: " + last_micros);
+        Serial.println(String("run time minutes: ") + (unsigned long)minutes + " = Hours: " + String((float)minutes / 60, 2));
         rotate(STEPS_PER_MIN + SAFETY_MOTION);  // go a little too far
         rotate(-SAFETY_MOTION);                 // correct it
         // bump the uSeconds for the next minute
