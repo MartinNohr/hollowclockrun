@@ -93,7 +93,12 @@ void loop() {
   if (settings.bTestMode) {
     // just run the motor until they enter anything
     rotate(STEPS_PER_MIN);
+    last_micros = current_micros = micros();
+    minutes = 0;
     if (Serial.available()) {
+      // empty the buffer
+      while (Serial.available())
+        Serial.read();
       settings.bTestMode = false;
       EEPROM.put(0, settings);
       EEPROM.commit();
