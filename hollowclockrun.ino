@@ -98,7 +98,8 @@ void loop() {
     if (Serial.available()) {
       // empty the buffer
       while (Serial.available())
-        Serial.read();
+        Serial.write(Serial.read());
+      Serial.write('\n');
       settings.bTestMode = false;
       EEPROM.put(0, settings);
       EEPROM.commit();
@@ -128,8 +129,21 @@ void loop() {
 
 void RunMenu() {
   if (Serial.available()) {
-    String line;
-    line = Serial.readString();
+    static String line;
+    char next = Serial.read();
+    Serial.write(next);
+    if (next == '\n')
+      return;
+    else
+      line += next;
+    // wait for newline
+    if (next != '\r')
+      return;
+    Serial.write('\n');
+    // empty the input
+    while (Serial.available()) {
+      Serial.write(Serial.read());
+    }
     line.trim();
     line.toUpperCase();
     if (line.length() == 0)
@@ -213,6 +227,7 @@ void RunMenu() {
       EEPROM.put(0, settings);
       EEPROM.commit();
     }
+    line = "";
     ShowMenu();
   }
 }
