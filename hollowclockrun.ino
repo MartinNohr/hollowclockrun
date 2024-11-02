@@ -1,6 +1,6 @@
 #include <EEPROM.h>
 #define HC_VERSION 1  // change this when the settings structure is changed
-#define FIRMWARE_VERSION 1.01
+#define FIRMWARE_VERSION 1.02
 
 // Motor and clock parameters
 // 2048 * 90 / 12 / 60 = 256
@@ -111,7 +111,7 @@ void loop() {
         // time to advance the clock one minute
         ++minutes;
         // Serial.println(String("run time minutes: ") + (unsigned long)minutes + " = Hours: " + String((float)minutes / 60, 2) + " internal clock uS: " + current_micros + " last uS: " + last_micros);
-        Serial.println(String("run time: ") + (unsigned long)minutes + " minutes = " + String((float)minutes / 60, 2) + " Hours");
+        Serial.println(String("run time: ") + (unsigned long)minutes + " minutes = " + String((float)minutes / 60, 3) + " Hours");
         rotate(STEPS_PER_MIN + SAFETY_MOTION);  // go a little too far
         rotate(-SAFETY_MOTION);                 // correct it
         // bump the uSeconds for the next minute
