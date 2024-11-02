@@ -247,7 +247,7 @@ void ShowMenu() {
   Serial.println(String("A<n>           : Adjust Minute Position (+/- 256 is a full minute)"));
   Serial.println(String("W              : Wait, toggle running state of clock"));
   Serial.println(String("C<n>           : Calibrate uSeconds per minute, is default, change as needed, +speeds up, -slows down"));
-  Serial.println(String("F<sec> <hours> : Figure correction using seconds and hours (floats), e.g. F -2.5 24.0 if 2 seconds slow per day"));
+  Serial.println(String("F<sec> <hours> : Figure correction using seconds and hours (floats), e.g. F -2.5 24.0 if 2.5 seconds slow per day"));
   Serial.println(String("S<n>           : Set stepper motor delay, default is 6, range 2 to 120"));
   Serial.println(String("T              : Test mode (enter anything while running to stop)"));
   Serial.println(String("R              : Reverse motor setting"));
