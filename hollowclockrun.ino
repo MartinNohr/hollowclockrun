@@ -1,6 +1,6 @@
 #include <EEPROM.h>
 #define HC_VERSION 1  // change this when the settings structure is changed
-#define FIRMWARE_VERSION 1.02
+#define FIRMWARE_VERSION 1.03
 
 // Motor and clock parameters
 // 2048 * 90 / 12 / 60 = 256
@@ -14,7 +14,7 @@ struct {
   int nVersion = HC_VERSION;  // this int must be first
                               // one minute per micro seconds. Theoretically it should be 60000000,
                               // and can be used to adjust the clock speed.
-  unsigned long nUSecPerMin = 60000000L;
+  long nUSecPerMin = 60000000L;
   bool bReverse = false;
   bool bTestMode = false;
   int nStepSpeed = 6;
@@ -86,10 +86,11 @@ void setup() {
   }
 }
 
+unsigned long last_micros;
+unsigned long current_micros;
 void loop() {
   static uint64_t minutes;
-  static unsigned long last_micros;
-  unsigned long current_micros = micros();
+  current_micros = micros();
   if (settings.bTestMode) {
     // just run the motor until they enter anything
     rotate(STEPS_PER_MIN);
@@ -107,11 +108,12 @@ void loop() {
   } else {
     if (settings.bRunning) {
       // see if we have gone another minute, use while because we might have missed a minute while doing menus
-      while (current_micros - last_micros >= settings.nUSecPerMin) {
+      // rollover is handled by using unsigned longs, happens about every 71.58 minutes
+      while (current_micros - last_micros >= (unsigned long)settings.nUSecPerMin) {
         // time to advance the clock one minute
         ++minutes;
-        // Serial.println(String("run time minutes: ") + (unsigned long)minutes + " = Hours: " + String((float)minutes / 60, 2) + " internal clock uS: " + current_micros + " last uS: " + last_micros);
         Serial.println(String("run time: ") + (unsigned long)minutes + " minutes = " + String((float)minutes / 60, 3) + " Hours");
+        Serial.println(String("internal clock uS: ") + current_micros + " last uS: " + last_micros);
         rotate(STEPS_PER_MIN + SAFETY_MOTION);  // go a little too far
         rotate(-SAFETY_MOTION);                 // correct it
         // bump the uSeconds for the next minute
@@ -218,7 +220,7 @@ void RunMenu() {
           long correction = (long)(seconds * 1000000.0 / hours / 60.0);
           // Serial.println(correction);
           // add to current setting, makes more sense since it might already have been adjusted
-          settings.nUSecPerMin = (long)settings.nUSecPerMin + correction;
+          settings.nUSecPerMin += (long)settings.nUSecPerMin + correction;
           bSaveSettings = true;
         }
         break;
@@ -235,6 +237,7 @@ void RunMenu() {
 void ShowMenu() {
   long correction = 60000000L - settings.nUSecPerMin;
   Serial.println(String("------ Current Settings ------"));
+  Serial.println(String("Current Seconds               : ") + (current_micros - last_micros) * 60 / settings.nUSecPerMin);
   Serial.println(String("Firmware version              : ") + FIRMWARE_VERSION);
   Serial.println(String("uSeconds calibrate per minute : ") + String(correction) + " or " + String((float)((float)correction * 60 * 24 / 1000000L), 2) + " sec/day");
   Serial.println(String("Wait/Run State                : ") + (settings.bRunning ? "Running" : "Waiting"));
