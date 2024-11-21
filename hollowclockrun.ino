@@ -1,6 +1,6 @@
 #include <EEPROM.h>
 #define HC_VERSION 1  // change this when the settings structure is changed
-#define FIRMWARE_VERSION 1.04
+#define FIRMWARE_VERSION 1.05
 
 // Motor and clock parameters
 // 2048 * 90 / 12 / 60 = 256
@@ -216,7 +216,7 @@ void RunMenu() {
           long correction = (long)(seconds * 1000000.0 / hours / 60.0);
           // Serial.println(correction);
           // add to current setting, makes more sense since it might already have been adjusted
-          settings.nUSecPerMin += (long)settings.nUSecPerMin + correction;
+          settings.nUSecPerMin += correction;
           bSaveSettings = true;
         }
         break;
