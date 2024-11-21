@@ -1,13 +1,10 @@
 #include <EEPROM.h>
 #define HC_VERSION 1  // change this when the settings structure is changed
-#define FIRMWARE_VERSION 1.03
+#define FIRMWARE_VERSION 1.04
 
 // Motor and clock parameters
 // 2048 * 90 / 12 / 60 = 256
 #define STEPS_PER_MIN 256
-
-//#define SAFETY_MOTION (STEPS_PER_MIN) // use this for the ratchet version
-#define SAFETY_MOTION (0)
 
 // hold setting information in EEPROM
 struct {
@@ -113,9 +110,8 @@ void loop() {
         // time to advance the clock one minute
         ++minutes;
         Serial.println(String("run time: ") + (unsigned long)minutes + " minutes = " + String((float)minutes / 60, 3) + " Hours");
-        Serial.println(String("internal clock uS: ") + current_micros + " last uS: " + last_micros);
-        rotate(STEPS_PER_MIN + SAFETY_MOTION);  // go a little too far
-        rotate(-SAFETY_MOTION);                 // correct it
+        // Serial.println(String("internal clock uS: ") + current_micros + " last uS: " + last_micros);
+        rotate(STEPS_PER_MIN);
         // bump the uSeconds for the next minute
         last_micros += settings.nUSecPerMin;
       }
