@@ -1,6 +1,7 @@
 #include <EEPROM.h>
+#include <bitset>
 #define HC_VERSION 1  // change this when the settings structure is changed
-#define FIRMWARE_VERSION 1.05
+#define FIRMWARE_VERSION 1.06
 
 // Motor and clock parameters
 // 2048 * 90 / 12 / 60 = 256
@@ -20,17 +21,8 @@ struct {
 } settings;
 
 // ports used to control the stepper motor
-// if your motor rotates in the opposite direction,
-// change the order as {2, 3, 4, 5};
+// list in order of pulsing for stepping
 int port[4] = { 5, 4, 3, 2 };
-
-// sequence of stepper motor control
-int seq[4][4] = {
-  { LOW, LOW, HIGH, LOW },
-  { LOW, LOW, LOW, HIGH },
-  { HIGH, LOW, LOW, LOW },
-  { LOW, HIGH, LOW, LOW }
-};
 
 void rotate(int step) {
   if (step == 0)
@@ -38,21 +30,23 @@ void rotate(int step) {
   // wait for a single step of stepper
   const int delaytime = settings.nStepSpeed;
   static int phase = 0;
-  int i, j;
   int delta = (step < 0 || settings.bReverse) ? 3 : 1;
   int dt = delaytime * 3;
 
   step = abs(step);
-  for (j = 0; j < step; j++) {
+  for (int j = 0; j < step; j++) {
     phase = (phase + delta) % 4;
-    for (i = 0; i < 4; i++) {
-      digitalWrite(port[i], seq[phase][i]);
+    std::bitset<4> bits = 0b0001;
+    // walk the bit from right to left as we enable/disable the ports
+    for (int i = 0; i < 4; i++, bits <<= 1) {
+      // turn on the port for the set bit and turn off the others
+      digitalWrite(port[i], bits.test(phase));
     }
     delay(dt);
     if (dt > delaytime) dt--;
   }
   // power cut
-  for (i = 0; i < 4; i++) {
+  for (int i = 0; i < 4; i++) {
     digitalWrite(port[i], LOW);
   }
 }
