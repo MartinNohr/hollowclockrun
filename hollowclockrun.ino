@@ -1,7 +1,6 @@
 #include <EEPROM.h>
-#include <bitset>
 #define HC_VERSION 1  // change this when the settings structure is changed
-#define FIRMWARE_VERSION 1.06
+#define FIRMWARE_VERSION 1.07
 
 // Motor and clock parameters
 // 2048 * 90 / 12 / 60 = 256
@@ -36,11 +35,10 @@ void rotate(int step) {
   step = abs(step);
   for (int j = 0; j < step; j++) {
     phase = (phase + delta) % 4;
-    std::bitset<4> bits = 0b0001;
-    // walk the bit from right to left as we enable/disable the ports
-    for (int i = 0; i < 4; i++, bits <<= 1) {
-      // turn on the port for the set bit and turn off the others
-      digitalWrite(port[i], bits.test(phase));
+    // enable only one of the ports during each step
+    for (int i = 0; i < 4; i++) {
+      // turn on the port for the phase value and turn off the others
+      digitalWrite(port[i], phase == i);
     }
     delay(dt);
     if (dt > delaytime) dt--;
